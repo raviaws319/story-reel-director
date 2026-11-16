@@ -1,0 +1,14 @@
+{
+  "name": "story-reel-director-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Autopilot runtime for the Story Reel Director skill: narration, images, captions, music and rendering.",
+  "engines": {"node": ">=20"},
+  "bin": {"srd": "scripts/srd.mjs"},
+  "dependencies": {"@napi-rs/canvas": "0.1.100"},
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "doctor": "node scripts/srd.mjs doctor"
+  }
+}

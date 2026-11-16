@@ -1,0 +1,52 @@
+{
+  "title": "Pip, the Little Cloud Who Couldn't Rain",
+  "mode": "kids",
+  "style": "storybook",
+  "aspect": "9:16",
+  "audience": "ages 3-7",
+  "characters": [
+    {"name": "Pip", "look": "a tiny round fluffy white cloud with rosy cheeks, big shiny eyes and a small smile"},
+    {"name": "Mama Cloud", "look": "a large soft grey-blue cloud with gentle eyes"}
+  ],
+  "setting": "a pastel sky above green rolling hills and a small flower garden",
+  "scenes": [
+    {
+      "id": "meet-pip",
+      "narration": "High up in the sky lived a tiny cloud named Pip.",
+      "image_prompt": "Pip floating happily in a pastel morning sky above rolling green hills",
+      "card": {"type": "title", "text": "Pip the Little Cloud"},
+      "motion": "zoom-in"
+    },
+    {
+      "id": "big-clouds",
+      "narration": "All the big clouds could make rain. Pitter, patter, pitter, patter! But Pip could only make one tiny drop.",
+      "image_prompt": "big friendly clouds raining gently on fields while Pip squeezes out one tiny raindrop, looking surprised",
+      "motion": "pan-right"
+    },
+    {
+      "id": "sad",
+      "narration": "Pip felt sad. Am I too small to help anyone, Pip wondered.",
+      "image_prompt": "Pip looking a little sad, drifting alone near a crescent moon at dusk, soft purple sky",
+      "motion": "zoom-out"
+    },
+    {
+      "id": "flower",
+      "narration": "Then Pip saw a tiny flower in the garden, drooping and thirsty.",
+      "image_prompt": "a tiny droopy pink flower in a garden looking up at Pip floating above it",
+      "motion": "pan-down"
+    },
+    {
+      "id": "drop",
+      "narration": "Pip took a deep breath and gave one tiny drop. Plip! The little flower lifted its head and smiled.",
+      "image_prompt": "one sparkling raindrop falling from Pip onto the tiny pink flower which is now standing tall and smiling, sparkles around",
+      "motion": "zoom-in"
+    },
+    {
+      "id": "moral",
+      "narration": "From that day on, Pip knew. Even the smallest helper can make a big difference.",
+      "image_prompt": "Pip and Mama Cloud smiling together above a garden full of happy blooming flowers, rainbow in the background",
+      "card": {"type": "moral", "text": "Even the smallest helper can make a big difference."},
+      "motion": "still"
+    }
+  ]
+}

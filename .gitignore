@@ -1,0 +1,6 @@
+node_modules/
+build/
+*.mp4
+!skills/story-reel-director/examples/**/*.mp4
+.DS_Store
+__pycache__/
