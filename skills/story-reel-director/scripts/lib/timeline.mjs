@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {readJson, writeJson} from './core.mjs';
 
-const GAP = {story: 0.35, kids: 0.7, food: 0.4};  // breathing room after each scene's narration
+const GAP = {story: 0.35, kids: 0.7};  // breathing room after each scene's narration
 export const LEAD_IN = 0.25;                       // silence before the first word of a scene
 const MAX_CHARS = {'9:16': 24, '1:1': 30, '16:9': 44};
 const MAX_WORDS = {'9:16': 5, '1:1': 6, '16:9': 9};

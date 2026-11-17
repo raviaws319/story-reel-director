@@ -1,52 +1,189 @@
 {
   "title": "Pip, the Little Cloud Who Couldn't Rain",
   "mode": "kids",
+  "engine": "acted",
   "style": "storybook",
   "aspect": "9:16",
   "audience": "ages 3-7",
-  "characters": [
-    {"name": "Pip", "look": "a tiny round fluffy white cloud with rosy cheeks, big shiny eyes and a small smile"},
-    {"name": "Mama Cloud", "look": "a large soft grey-blue cloud with gentle eyes"}
+  "cast": [
+    {"name": "Pip", "shape": "cloud", "color": "#ffffff", "accent": "#4aa8e8", "size": 0.8},
+    {"name": "Mama", "shape": "cloud", "color": "#dfe9f5", "accent": "#7d8fb3", "size": 1.25, "voice": {"pitch": "-10Hz"}},
+    {"name": "Bo", "species": "bunny", "scarf": "#e63946", "accent": "#e8590c"}
   ],
-  "setting": "a pastel sky above green rolling hills and a small flower garden",
   "scenes": [
     {
       "id": "meet-pip",
-      "narration": "High up in the sky lived a tiny cloud named Pip.",
-      "image_prompt": "Pip floating happily in a pastel morning sky above rolling green hills",
+      "set": "meadow",
+      "time": "day",
       "card": {"type": "title", "text": "Pip the Little Cloud"},
-      "motion": "zoom-in"
+      "start": {"Mama": {"x": 0.74, "alt": 0.13}},
+      "beats": [
+        {
+          "speaker": "narrator",
+          "text": "High up in the sky lived a tiny cloud named Pip.",
+          "camera": "wide",
+          "emotions": {"Pip": "happy"},
+          "actions": [
+            {"who": "Pip", "do": "enter", "from": "left", "to": 0.3, "alt": 0.17},
+            {"who": "Pip", "do": "wave", "on": "Pip"}
+          ]
+        },
+        {
+          "speaker": "narrator",
+          "text": "All the big clouds could make rain. Pitter, patter, pitter, patter!",
+          "focus": ["Mama"],
+          "camera": "medium",
+          "emotions": {"Mama": "proud"},
+          "actions": [
+            {"who": "Mama", "do": "squeeze", "on": "rain"},
+            {"who": "Mama", "do": "burst", "kind": "drops", "on": "Pitter"},
+            {"who": "Mama", "do": "burst", "kind": "drops", "on": "patter"},
+            {"who": "Pip", "do": "look", "target": "Mama"}
+          ]
+        },
+        {
+          "speaker": "narrator",
+          "text": "But Pip could only make one tiny drop.",
+          "focus": ["Pip"],
+          "emotions": {"Pip": "determined"},
+          "actions": [
+            {"who": "Pip", "do": "squeeze", "on": "only"},
+            {"who": "Pip", "do": "burst", "kind": "drops", "on": "tiny"},
+            {"who": "Pip", "do": "feel", "as": "sad", "on": "drop"}
+          ]
+        },
+        {
+          "speaker": "Pip",
+          "text": "Am I too small to help anyone?",
+          "emotions": {"Pip": "sad", "Mama": "loving"},
+          "actions": [
+            {"who": "Pip", "do": "sigh", "on": "anyone"},
+            {"who": "Mama", "do": "look", "target": "Pip"}
+          ]
+        }
+      ]
     },
     {
-      "id": "big-clouds",
-      "narration": "All the big clouds could make rain. Pitter, patter, pitter, patter! But Pip could only make one tiny drop.",
-      "image_prompt": "big friendly clouds raining gently on fields while Pip squeezes out one tiny raindrop, looking surprised",
-      "motion": "pan-right"
+      "id": "garden",
+      "set": "meadow",
+      "time": "sunset",
+      "props": [{"id": "flower", "type": "flower", "x": 0.62, "droop": 1, "bloom": 0.3, "face": true, "scale": 1.3}],
+      "start": {"Pip": {"x": -0.25, "alt": 0.34, "emotion": "sad"}},
+      "beats": [
+        {
+          "speaker": "narrator",
+          "text": "Down in the garden, Bo the bunny was worried. His little flower was drooping and thirsty.",
+          "camera": "medium",
+          "focus": ["Bo", "flower"],
+          "emotions": {"Bo": "sad"},
+          "actions": [
+            {"who": "Bo", "do": "enter", "from": "left", "to": 0.38},
+            {"who": "Bo", "do": "look", "target": "flower"},
+            {"who": "Bo", "do": "reach", "target": "flower", "on": "flower"},
+            {"who": "Bo", "do": "slump", "on": "thirsty"}
+          ]
+        },
+        {
+          "speaker": "Bo",
+          "text": "Oh no! Please, somebody help my flower!",
+          "emotions": {"Bo": "crying"},
+          "actions": [
+            {"who": "Bo", "do": "look", "target": "up"},
+            {"who": "Bo", "do": "cry", "on": "help"}
+          ]
+        },
+        {
+          "speaker": "narrator",
+          "text": "Pip heard Bo, and floated down as fast as a little cloud can.",
+          "camera": "wide",
+          "emotions": {"Pip": "curious", "Bo": "surprised"},
+          "actions": [
+            {"who": "Pip", "do": "fly", "to": 0.62, "alt": 0.3, "dur": 2.2},
+            {"who": "Bo", "do": "look", "target": "Pip", "on": "floated"},
+            {"who": "Bo", "do": "gasp", "on": "floated"}
+          ]
+        }
+      ]
     },
     {
-      "id": "sad",
-      "narration": "Pip felt sad. Am I too small to help anyone, Pip wondered.",
-      "image_prompt": "Pip looking a little sad, drifting alone near a crescent moon at dusk, soft purple sky",
-      "motion": "zoom-out"
-    },
-    {
-      "id": "flower",
-      "narration": "Then Pip saw a tiny flower in the garden, drooping and thirsty.",
-      "image_prompt": "a tiny droopy pink flower in a garden looking up at Pip floating above it",
-      "motion": "pan-down"
-    },
-    {
-      "id": "drop",
-      "narration": "Pip took a deep breath and gave one tiny drop. Plip! The little flower lifted its head and smiled.",
-      "image_prompt": "one sparkling raindrop falling from Pip onto the tiny pink flower which is now standing tall and smiling, sparkles around",
-      "motion": "zoom-in"
+      "id": "one-drop",
+      "set": "meadow",
+      "time": "sunset",
+      "props": [{"id": "flower", "type": "flower", "x": 0.62, "droop": 1, "bloom": 0.3, "face": true, "scale": 1.3}],
+      "start": {"Bo": {"x": 0.3, "emotion": "curious", "look": "Pip"}, "Pip": {"x": 0.62, "alt": 0.3, "emotion": "determined"}},
+      "beats": [
+        {
+          "speaker": "Pip",
+          "text": "I only have one drop. But I will try!",
+          "camera": "medium",
+          "focus": ["Pip", "Bo"],
+          "actions": [
+            {"who": "Pip", "do": "look", "target": "Bo"},
+            {"who": "Pip", "do": "nod", "on": "try"}
+          ]
+        },
+        {
+          "speaker": "narrator",
+          "text": "Pip took a deep breath, squeezed, and... Plip!",
+          "camera": "push-in",
+          "focus": ["Pip", "flower"],
+          "actions": [
+            {"who": "Pip", "do": "look", "target": "flower"},
+            {"who": "Pip", "do": "squeeze", "on": "squeezed"},
+            {"who": "Pip", "do": "emit", "kind": "drop", "to": "flower", "on": "Plip", "dur": 0.6}
+          ]
+        },
+        {
+          "speaker": "narrator",
+          "text": "The little flower lifted its head, opened its petals, and smiled.",
+          "camera": "medium",
+          "focus": ["flower", "Bo"],
+          "emotions": {"Pip": "surprised", "Bo": "surprised"},
+          "actions": [
+            {"prop": "flower", "set": {"droop": 0, "bloom": 1}, "over": 1.6, "on": "lifted"},
+            {"who": "Pip", "do": "burst", "kind": "sparkles", "at_prop": "flower", "on": "opened"},
+            {"who": "Bo", "do": "feel", "as": "excited", "on": "smiled"},
+            {"who": "Bo", "do": "jump", "on": "smiled"}
+          ]
+        },
+        {
+          "speaker": "Bo",
+          "text": "You did it, Pip! Thank you!",
+          "camera": "wide",
+          "emotions": {"Bo": "excited", "Pip": "proud"},
+          "actions": [
+            {"who": "Bo", "do": "cheer"},
+            {"who": "Bo", "do": "burst", "kind": "hearts", "on": "Thank"},
+            {"who": "Pip", "do": "spin", "on": "Thank"}
+          ]
+        }
+      ]
     },
     {
       "id": "moral",
-      "narration": "From that day on, Pip knew. Even the smallest helper can make a big difference.",
-      "image_prompt": "Pip and Mama Cloud smiling together above a garden full of happy blooming flowers, rainbow in the background",
+      "set": "meadow",
+      "time": "day",
       "card": {"type": "moral", "text": "Even the smallest helper can make a big difference."},
-      "motion": "still"
+      "props": [
+        {"id": "flower", "type": "flower", "x": 0.62, "droop": 0, "bloom": 1, "face": true, "scale": 1.3},
+        {"id": "flower2", "type": "flower", "x": 0.82, "color": "#ffd166", "scale": 1.1},
+        {"id": "flower3", "type": "flower", "x": 0.16, "color": "#c8a2ff", "scale": 1.0}
+      ],
+      "start": {"Bo": {"x": 0.38, "emotion": "happy"}, "Pip": {"x": 0.62, "alt": 0.16, "emotion": "happy"}},
+      "weather": "petals",
+      "beats": [
+        {
+          "speaker": "narrator",
+          "text": "From that day on, Pip knew. Even the smallest helper can make a big difference.",
+          "camera": "wide",
+          "actions": [
+            {"who": "Bo", "do": "wave", "target": "Pip"},
+            {"who": "Pip", "do": "wave", "target": "Bo", "after": 0.4},
+            {"who": "Bo", "do": "dance", "on": "smallest"},
+            {"who": "Pip", "do": "laugh", "on": "big"}
+          ]
+        }
+      ]
     }
   ]
 }

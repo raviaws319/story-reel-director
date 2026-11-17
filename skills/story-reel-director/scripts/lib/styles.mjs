@@ -4,7 +4,6 @@
 export const MODES = {
   story: {label: 'Story Narrator', defaultStyle: 'cinematic', music: 'pad', captionStyle: 'bold'},
   kids: {label: 'Kids Stories', defaultStyle: 'storybook', music: 'musicbox', captionStyle: 'karaoke'},
-  food: {label: 'Food Videos', defaultStyle: 'warm-kitchen', music: 'pluck', captionStyle: 'bold'},
 };
 
 export const STYLES = {
@@ -45,22 +44,6 @@ export const STYLES = {
     negative: 'text, letters, watermark, scary, violent, horror, weapons, existing cartoon characters, brand mascots',
     palette: {bg: '#eaf6ff', ink: '#16324f', accent: '#2bb673', soft: '#c9e8ff', highlight: '#ffcf33'},
     font: 'Sans', voice: 'en-US-EmmaNeural', voiceRate: '-8%', motionScale: 0.7,
-  },
-
-  // ---------- Food Videos ----------
-  'warm-kitchen': {
-    modes: ['food'], label: 'Warm Kitchen (photo-real)',
-    prompt: 'appetizing professional food photography, warm natural window light, rustic wooden table, steam rising, shallow depth of field, rich textures, overhead or 45-degree angle',
-    negative: 'text, letters, watermark, logo, packaging brand, plastic look, unappetizing, hands deformed',
-    palette: {bg: '#1c140f', ink: '#fff8ef', accent: '#ffb547', soft: '#3a2a20'},
-    font: 'Sans', voice: 'en-US-AriaNeural', voiceRate: '+4%', motionScale: 1.0,
-  },
-  'flat-food': {
-    modes: ['food'], label: 'Flat Illustrated',
-    prompt: 'flat vector food illustration, bold clean shapes, cheerful saturated palette, subtle grain texture, top-down layout, minimal background',
-    negative: 'text, letters, watermark, logo, photorealistic, 3d render',
-    palette: {bg: '#fff4e0', ink: '#2b2118', accent: '#ef5b3b', soft: '#ffd9a8'},
-    font: 'Sans', voice: 'en-US-JennyNeural', voiceRate: '+5%', motionScale: 0.8,
   },
 };
 

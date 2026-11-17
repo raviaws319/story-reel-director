@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {STYLES, MODES} from './styles.mjs';
+import {validateActed} from './acting/schema.mjs';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const FFMPEG = process.env.FFMPEG || 'ffmpeg';
@@ -17,7 +18,8 @@ export const ASPECTS = {
   '1:1': {width: 1080, height: 1080},
 };
 export const MOTIONS = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right', 'pan-up', 'pan-down', 'still'];
-export const CARD_TYPES = ['title', 'ingredients', 'step', 'timer', 'moral', 'fact', 'end'];
+export const CARD_TYPES = ['title', 'moral', 'fact', 'end'];
+export const ENGINES = ['acted', 'illustrated'];
 
 export function run(cmd, args, opts = {}) {
   const r = spawnSync(cmd, args, {encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...opts});
@@ -70,6 +72,7 @@ export function withDefaults(p) {
     aspect: '9:16',
     fps: 30,
     language: 'en',
+    engine: 'illustrated',
     ...p,
     style: p.style || mode.defaultStyle,
     voice: {provider: 'edge', name: style.voice, rate: style.voiceRate || '+0%', ...(p.voice || {})},
@@ -87,6 +90,9 @@ export function validateProject(p) {
   if (p.style && !STYLES[p.style]) e.push(`style "${p.style}" is unknown; choose one of: ${Object.keys(STYLES).join(', ')}`);
   if (p.style && STYLES[p.style] && MODES[p.mode] && !STYLES[p.style].modes.includes(p.mode)) e.push(`style "${p.style}" is not available for mode "${p.mode}"`);
   if (p.aspect && !ASPECTS[p.aspect]) e.push(`aspect must be one of: ${Object.keys(ASPECTS).join(', ')}`);
+  if (p.engine && !ENGINES.includes(p.engine)) e.push(`engine must be one of: ${ENGINES.join(', ')}`);
+  for (const s of p.scenes || []) if (s.card && !CARD_TYPES.includes(s.card.type)) e.push(`scene "${s.id}": card.type must be one of: ${CARD_TYPES.join(', ')}`);
+  if (p.engine === 'acted') return [...e, ...validateActed(p)];
   if (!Array.isArray(p.scenes) || !p.scenes.length) e.push('scenes must be a non-empty array');
   const ids = new Set();
   (p.scenes || []).forEach((s, i) => {
@@ -98,11 +104,6 @@ export function validateProject(p) {
     if (!s.narration || typeof s.narration !== 'string') e.push(`${at}.narration is required`);
     if (!s.image_prompt && !s.image) e.push(`${at} needs image_prompt (to generate) or image (a file path)`);
     if (s.motion && !MOTIONS.includes(s.motion)) e.push(`${at}.motion must be one of: ${MOTIONS.join(', ')}`);
-    if (s.card) {
-      if (!CARD_TYPES.includes(s.card.type)) e.push(`${at}.card.type must be one of: ${CARD_TYPES.join(', ')}`);
-      if (s.card.type === 'ingredients' && !Array.isArray(s.card.items)) e.push(`${at}.card.items must be a list for an ingredients card`);
-      if (s.card.type === 'timer' && !(s.card.minutes > 0)) e.push(`${at}.card.minutes must be a positive number for a timer card`);
-    }
   });
   if (p.mode === 'kids' && p.scenes?.length) {
     if (!p.scenes.some(s => s.card?.type === 'moral')) e.push('kids stories end with a moral: add a scene with card {"type":"moral","text":"..."}');

@@ -1,51 +1,140 @@
 {
-  "title": "The Bamboo That Waited Five Years",
+  "title": "The Lantern Maker's Daughter",
   "mode": "story",
-  "style": "cinematic",
-  "aspect": "9:16",
-  "characters": [
-    {"name": "the farmer", "look": "weathered middle-aged farmer, straw hat, faded blue work shirt, kind tired eyes"}
+  "engine": "acted",
+  "style": "sketch",
+  "aspect": "16:9",
+  "cast": [
+    {"name": "Mira", "species": "child", "hair": "bob", "hairColor": "#2f2118", "skin": "#d9a273", "top": "#e76f51", "dress": true, "accent": "#e76f51", "size": 0.85},
+    {"name": "Papa", "species": "adult", "hair": "short", "hairColor": "#4a4a4a", "skin": "#c98d5e", "top": "#2a9d8f", "bottom": "#264653", "glasses": true, "accent": "#2a9d8f", "size": 1.1, "voice": {"pitch": "-15Hz"}},
+    {"name": "Old Tom", "species": "adult", "hair": "none", "skin": "#e8b98f", "top": "#6d597a", "bottom": "#355070", "hat": "straw", "accent": "#6d597a", "voice": {"pitch": "-25Hz", "rate": "-8%"}}
   ],
-  "setting": "a quiet hillside farm in early morning mist",
   "scenes": [
     {
-      "id": "hook",
-      "narration": "For four years, he watered a patch of dirt. Nothing grew. Not a single leaf.",
-      "image_prompt": "the farmer kneeling beside a bare patch of soil holding a watering can, misty dawn, lonely wide shot",
-      "card": {"type": "title", "text": "4 years. Nothing grew."},
-      "motion": "zoom-in"
+      "id": "workshop",
+      "set": "village",
+      "time": "sunset",
+      "card": {"type": "title", "text": "One lantern. One dark road."},
+      "props": [
+        {"id": "lantern", "type": "lantern", "x": 0.52, "glow": 0, "scale": 1.2},
+        {"id": "box", "type": "box", "x": 0.7}
+      ],
+      "start": {"Papa": {"x": 0.64, "emotion": "neutral", "look": "lantern"}},
+      "beats": [
+        {
+          "speaker": "narrator",
+          "text": "Every evening, Mira watched her father light one small lantern at the edge of the village.",
+          "camera": "wide",
+          "emotions": {"Mira": "curious"},
+          "actions": [
+            {"who": "Mira", "do": "enter", "from": "left", "to": 0.36},
+            {"who": "Papa", "do": "reach", "target": "lantern", "on": "light"},
+            {"prop": "lantern", "set": {"glow": 1}, "over": 0.8, "on": "lantern"},
+            {"who": "Mira", "do": "look", "target": "lantern"}
+          ]
+        },
+        {
+          "speaker": "Mira",
+          "text": "Papa, why bother? It is only one tiny light.",
+          "emotions": {"Mira": "thinking"},
+          "actions": [
+            {"who": "Mira", "do": "look", "target": "Papa"},
+            {"who": "Mira", "do": "shrug", "on": "bother"},
+            {"who": "Mira", "do": "point", "target": "lantern", "on": "tiny"}
+          ]
+        },
+        {
+          "speaker": "Papa",
+          "text": "Wait until dark, little one. Then you will see.",
+          "emotions": {"Papa": "loving"},
+          "actions": [
+            {"who": "Papa", "do": "look", "target": "Mira"},
+            {"who": "Papa", "do": "nod", "on": "see"}
+          ]
+        }
+      ]
     },
     {
-      "id": "doubt",
-      "narration": "His neighbors laughed. Why keep watering something that refuses to live?",
-      "image_prompt": "villagers pointing and laughing from a fence while the farmer keeps watering bare soil, golden hour",
-      "motion": "pan-right"
-    },
-    {
-      "id": "routine",
-      "narration": "Still, every single morning, he came back. Same soil. Same water. Same silence.",
-      "image_prompt": "close-up of weathered hands pouring water onto dark soil, droplets catching sunrise light",
-      "motion": "zoom-out"
-    },
-    {
-      "id": "roots",
-      "narration": "What nobody could see was happening underground. Roots, spreading for miles, getting ready.",
-      "image_prompt": "cross-section view of earth revealing a vast glowing network of bamboo roots spreading underground beneath a bare surface",
-      "card": {"type": "fact", "text": "Some bamboo spends years growing roots before shooting up."},
-      "motion": "pan-down"
-    },
-    {
-      "id": "growth",
-      "narration": "Then, in the fifth year, the bamboo shot up nearly ninety feet in just six weeks.",
-      "image_prompt": "towering bamboo forest bursting upward toward the sky, the farmer small at the base looking up in awe, epic low angle",
-      "motion": "pan-up"
+      "id": "night-road",
+      "set": "forest",
+      "time": "night",
+      "weather": "fireflies",
+      "props": [{"id": "lantern", "type": "lantern", "x": 0.72, "glow": 1, "scale": 1.2}],
+      "start": {"Mira": {"x": 0.86, "emotion": "sleepy", "look": "left"}},
+      "beats": [
+        {
+          "speaker": "narrator",
+          "text": "That night, a storm had scattered the path. Old Tom, the miller, was lost in the forest.",
+          "camera": "wide",
+          "emotions": {"Old Tom": "scared"},
+          "actions": [
+            {"who": "Old Tom", "do": "enter", "from": "left", "to": 0.2},
+            {"who": "Old Tom", "do": "look-around", "on": "lost"}
+          ]
+        },
+        {
+          "speaker": "Old Tom",
+          "text": "Which way is home? I cannot see a thing!",
+          "actions": [
+            {"who": "Old Tom", "do": "shiver"},
+            {"who": "Old Tom", "do": "shrug", "on": "cannot"}
+          ]
+        },
+        {
+          "speaker": "narrator",
+          "text": "Then, far away between the trees, he saw it. One small, steady light.",
+          "camera": "push-in",
+          "focus": ["Old Tom", "lantern"],
+          "emotions": {"Old Tom": "surprised", "Mira": "curious"},
+          "actions": [
+            {"who": "Old Tom", "do": "look", "target": "lantern", "on": "saw"},
+            {"who": "Old Tom", "do": "gasp", "on": "saw"},
+            {"who": "Old Tom", "do": "point", "target": "lantern", "on": "One"}
+          ]
+        },
+        {
+          "speaker": "narrator",
+          "text": "He followed it, step by step, all the way home.",
+          "camera": "follow",
+          "focus": ["Old Tom"],
+          "emotions": {"Old Tom": "happy", "Mira": "surprised"},
+          "actions": [
+            {"who": "Old Tom", "do": "walk", "to": 0.56, "dur": 2.6},
+            {"who": "Mira", "do": "look", "target": "Old Tom"},
+            {"who": "Mira", "do": "wave", "target": "Old Tom", "on": "home"}
+          ]
+        }
+      ]
     },
     {
       "id": "lesson",
-      "narration": "So if you are working hard and seeing nothing, you might just be growing roots. Keep going.",
-      "image_prompt": "the farmer standing proudly in a lush bamboo grove at sunrise, warm light rays, hopeful mood",
-      "card": {"type": "end", "text": "Keep growing roots.", "subtitle": "Follow for more stories"},
-      "motion": "zoom-in"
+      "set": "village",
+      "time": "night",
+      "card": {"type": "end", "text": "Be the one small light.", "subtitle": "Follow for more stories", "seconds": 5},
+      "props": [{"id": "lantern", "type": "lantern", "x": 0.5, "glow": 1, "scale": 1.2}],
+      "start": {"Mira": {"x": 0.36, "emotion": "happy", "look": "lantern"}, "Papa": {"x": 0.66, "emotion": "proud", "look": "Mira"}},
+      "beats": [
+        {
+          "speaker": "Mira",
+          "text": "Papa, I understand now. One light is enough to bring someone home.",
+          "camera": "wide",
+          "actions": [
+            {"who": "Mira", "do": "look", "target": "Papa"},
+            {"who": "Mira", "do": "burst", "kind": "sparkles", "at_prop": "lantern", "on": "light"},
+            {"who": "Papa", "do": "nod", "on": "enough"}
+          ]
+        },
+        {
+          "speaker": "narrator",
+          "text": "You do not need to light the whole world. Just the road in front of you.",
+          "emotions": {"Mira": "loving", "Papa": "loving"},
+          "actions": [
+            {"who": "Mira", "do": "walk", "to": "Papa", "on": "whole"},
+            {"who": "Mira", "do": "hug", "target": "Papa", "on": "road"},
+            {"who": "Papa", "do": "hug", "target": "Mira", "on": "road"}
+          ]
+        }
+      ]
     }
   ]
 }

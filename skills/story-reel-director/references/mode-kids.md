@@ -24,7 +24,15 @@ Gentle, original picture-book stories for young children (default ages 3–7; as
 - Sad moments are gentle and resolved within the next scene.
 - If a user request conflicts with these rules, suggest a gentle alternative instead.
 
-## Visuals
+## Staging (acted engine)
+
+- Animal and floating characters (bunny, bear, cloud, star, sun) suit this age best; give each a signature colour.
+- Bright daytime sets by default; `night` with `fireflies` or `sparkles` for bedtime endings.
+- Big, readable acting: wave, hop, cheer, clap, hug, gasp, dance. Children follow the story through the bodies, not the words.
+- A prop that changes at the turning point (a flower that blooms, a lantern that lights) makes the lesson visible.
+- End on a wide shot with the moral card and everyone happy.
+
+## Visuals (illustrated engine)
 
 - `storybook` (default): soft watercolor picture-book look.
 - `cartoon-3d`: bright, rounded 3D cartoon look.

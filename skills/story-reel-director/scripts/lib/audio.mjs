@@ -113,7 +113,7 @@ export function addSfx(buf, kind, at, gain = 0.5) {
 export function mixSoundtrack(project, timeline, paths, outFile) {
   const total = Math.ceil(timeline.duration * RATE);
   const voice = new Float32Array(total);
-  for (const s of timeline.scenes) {
+  for (const s of timeline.audio || timeline.scenes) {
     const {samples} = readWavMono(path.join(paths.audio, `${s.id}.wav`));
     const off = Math.floor(s.audioStart * RATE);
     for (let i = 0; i < samples.length && off + i < total; i++) voice[off + i] += samples[i];
@@ -147,9 +147,14 @@ export function mixSoundtrack(project, timeline, paths, outFile) {
       if (i > 0 && project.mode !== 'kids') addSfx(out, 'whoosh', s.start - 0.2, 0.25);
       if (i > 0 && project.mode === 'kids') addSfx(out, 'sparkle', s.start - 0.1, 0.12);
       if (scene.card?.type === 'moral') addSfx(out, 'chime', s.start + 0.1, 0.35);
-      if (scene.card?.type === 'timer') addSfx(out, 'ding', s.end - 1.1, 0.3);
-      if (scene.card?.type === 'ingredients') scene.card.items.forEach((_, k) => addSfx(out, 'pop', s.start + 0.4 + k * Math.min(0.7, (s.duration - 1) / scene.card.items.length), 0.18));
       for (const fx of scene.sfx || []) addSfx(out, fx.kind, s.start + (fx.at || 0), fx.gain ?? 0.4);
+      // Acted scenes: sounds follow the acting.
+      for (const a of (s.beats || []).flatMap(b => b.actions)) {
+        if (['jump', 'hop', 'cheer', 'spin'].includes(a.do)) addSfx(out, 'pop', a.t + 0.2, 0.16);
+        else if (a.do === 'burst') addSfx(out, 'sparkle', a.t, 0.14);
+        else if (a.do === 'emit') addSfx(out, 'pop', a.t + (a.dur || 0.8), 0.2);
+        else if (['gasp', 'run'].includes(a.do) || a.do === 'shake') addSfx(out, 'whoosh', a.t, 0.14);
+      }
     });
   }
   let opeak = 0; for (const v of out) opeak = Math.max(opeak, Math.abs(v));

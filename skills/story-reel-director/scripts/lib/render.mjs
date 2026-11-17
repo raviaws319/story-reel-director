@@ -7,6 +7,7 @@ import {once} from 'node:events';
 import {createCanvas, loadImage, GlobalFonts} from '@napi-rs/canvas';
 import {ROOT, ASPECTS, FFMPEG, run, log} from './core.mjs';
 import {STYLES, MODES} from './styles.mjs';
+import {makeStagePainter, perform} from './acting/stage.mjs';
 
 let fontsReady = false;
 function registerFonts() {
@@ -52,7 +53,8 @@ function panel(ctx, x, y, w, h, r, fill, alpha = 1) {
   ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); ctx.restore();
 }
 
-export function makeFrameRenderer(project, timeline, images, W, H) {
+// Captions, cards and the progress bar: shared by the illustrated and acted engines.
+export function makeOverlays(project, timeline, ctx, W, H, layout = {}) {
   registerFonts();
   const style = STYLES[project.style], pal = style.palette, mode = MODES[project.mode];
   const u = Math.min(W, H) / 1080;          // layout unit
@@ -60,15 +62,7 @@ export function makeFrameRenderer(project, timeline, images, W, H) {
   const fontFor = kind => (kind === 'hand' || style.font === 'Hand') ? 'SRDHand' : 'SRDSans';
   const capFont = style.font === 'Hand' ? 'SRDHand' : 'SRDSans';
   const capSize = Math.round((style.font === 'Hand' ? 86 : 64) * u * (portrait ? 1 : 0.85));
-  const capY = portrait ? H * 0.74 : H * 0.86;
-  const XFADE = 0.4;
-  const canvas = createCanvas(W, H), ctx = canvas.getContext('2d');
-
-  function drawScene(i, t) {
-    const s = timeline.scenes[i], scene = project.scenes[i];
-    const motion = scene.motion || DEFAULT_MOTIONS[i % DEFAULT_MOTIONS.length];
-    drawMotion(ctx, images[i], W, H, motion, (t - s.start) / s.duration, style.motionScale);
-  }
+  const capY = (layout.capY ?? (portrait ? 0.74 : 0.86)) * H;
 
   function drawCaption(t) {
     if (!project.captions.enabled) return;
@@ -96,12 +90,12 @@ export function makeFrameRenderer(project, timeline, images, W, H) {
       const spoken = t >= timing.start;
       if (mode.captionStyle === 'karaoke') {
         ctx.fillStyle = spoken ? pal.ink : 'rgba(59,47,74,0.38)';
-        if (active) { ctx.fillStyle = pal.accent; }
+        if (active) { ctx.fillStyle = cue.color || pal.accent; }
         ctx.fillText(w, x, capY);
       } else {
         ctx.lineJoin = 'round'; ctx.lineWidth = 12 * u; ctx.strokeStyle = 'rgba(0,0,0,0.9)';
         ctx.strokeText(w, x, capY);
-        ctx.fillStyle = active ? pal.accent : '#ffffff';
+        ctx.fillStyle = active ? (cue.color || pal.accent) : '#ffffff';
         ctx.fillText(w, x, capY);
       }
       x += ww + space * shrink;
@@ -112,7 +106,10 @@ export function makeFrameRenderer(project, timeline, images, W, H) {
   function drawCard(i, t) {
     const s = timeline.scenes[i], scene = project.scenes[i], card = scene.card;
     const lt = t - s.start, p = lt / s.duration;
-    const inA = backOut(lt / 0.45), outA = Math.min(1, (s.end - t) / 0.3);
+    // Title cards clear after a few seconds so they never sit on top of the acting.
+    const cardEnd = card?.seconds ? s.start + card.seconds : card?.type === 'title' && project.engine === 'acted' ? Math.min(s.end, s.start + 3.4) : s.end;
+    if (t > cardEnd) return;
+    const inA = backOut(lt / 0.45), outA = Math.min(1, (cardEnd - t) / 0.3);
     const a = Math.max(0, Math.min(1, inA)) * outA;
     if (!card && scene.on_screen_text) return headline(scene.on_screen_text, a, inA);
     if (!card) return;
@@ -120,40 +117,6 @@ export function makeFrameRenderer(project, timeline, images, W, H) {
     ctx.save(); ctx.globalAlpha = a;
     if (card.type === 'title' || card.type === 'end') {
       headline(card.text || project.title, a, inA, card.subtitle);
-    } else if (card.type === 'step') {
-      const r = 64 * u;
-      panel(ctx, cx, top, cw, r * 2 + 40 * u, 32 * u, pal.bg);
-      ctx.fillStyle = pal.accent; ctx.beginPath(); ctx.arc(cx + 30 * u + r, top + 20 * u + r, r * inA, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.font = `800 ${Math.round(64 * u)}px SRDSans`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(String(card.number ?? ''), cx + 30 * u + r, top + 20 * u + r + 4 * u);
-      ctx.textAlign = 'left'; ctx.fillStyle = pal.ink; ctx.font = `700 ${Math.round(46 * u)}px ${fontFor()}`;
-      const lines = wrapLines(ctx, card.text || '', cw - r * 2 - 90 * u).slice(0, 2);
-      lines.forEach((l, k) => ctx.fillText(l, cx + r * 2 + 60 * u, top + 20 * u + r + (k - (lines.length - 1) / 2) * 54 * u));
-    } else if (card.type === 'ingredients') {
-      const items = card.items, rowH = 58 * u, h = 120 * u + items.length * rowH;
-      panel(ctx, cx, top, cw, h, 32 * u, pal.bg, 0.94);
-      ctx.fillStyle = pal.accent; ctx.font = `800 ${Math.round(50 * u)}px SRDSans`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-      ctx.fillText(card.title || 'Ingredients', cx + 40 * u, top + 60 * u);
-      const step = Math.min(0.7, (s.duration - 1) / items.length);
-      items.forEach((it, k) => {
-        const show = ease((lt - 0.4 - k * step) / 0.25);
-        if (show <= 0) return;
-        const y = top + 120 * u + k * rowH + rowH / 2;
-        ctx.globalAlpha = a * show;
-        ctx.fillStyle = pal.accent; ctx.beginPath(); ctx.arc(cx + 56 * u, y, 14 * u, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = pal.ink; ctx.font = `600 ${Math.round(40 * u)}px SRDSans`;
-        ctx.fillText(it, cx + 92 * u + (1 - show) * 30 * u, y);
-      });
-    } else if (card.type === 'timer') {
-      const R = 120 * u, cy = top + R + 30 * u, ccx = W / 2;
-      panel(ctx, ccx - R - 40 * u, top, (R + 40 * u) * 2, R * 2 + 140 * u, 40 * u, pal.bg, 0.94);
-      ctx.lineWidth = 22 * u; ctx.strokeStyle = 'rgba(128,128,128,0.3)'; ctx.beginPath(); ctx.arc(ccx, cy, R, 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = pal.accent; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(ccx, cy, R, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ease(p)); ctx.stroke();
-      ctx.fillStyle = pal.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      const remaining = Math.max(0, Math.ceil(card.minutes * (1 - p)));
-      ctx.font = `800 ${Math.round(76 * u)}px SRDSans`; ctx.fillText(`${remaining}`, ccx, cy - 6 * u);
-      ctx.font = `600 ${Math.round(30 * u)}px SRDSans`; ctx.fillText('min', ccx, cy + 52 * u);
-      ctx.font = `700 ${Math.round(38 * u)}px SRDSans`; ctx.fillText(card.label || `${card.minutes} minutes`, ccx, cy + R + 70 * u);
     } else if (card.type === 'moral' || card.type === 'fact') {
       const label = card.type === 'moral' ? (card.title || 'The moral of the story') : (card.title || 'Did you know?');
       ctx.font = `700 ${Math.round((style.font === 'Hand' ? 64 : 48) * u)}px ${fontFor()}`;
@@ -185,7 +148,7 @@ export function makeFrameRenderer(project, timeline, images, W, H) {
     const size = Math.round((style.font === 'Hand' ? 110 : 84) * u);
     ctx.font = `800 ${size}px ${fontFor()}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const lines = wrapLines(ctx, text, W * 0.86).slice(0, 3);
-    const y0 = portrait ? H * 0.2 : H * 0.18, sc = 0.85 + 0.15 * Math.min(1, pop);
+    const y0 = portrait ? H * 0.2 : H * 0.13, sc = 0.85 + 0.15 * Math.min(1, pop);
     ctx.translate(W / 2, y0); ctx.scale(sc, sc); ctx.translate(-W / 2, -y0);
     lines.forEach((l, k) => {
       const y = y0 + k * size * 1.12;
@@ -200,25 +163,51 @@ export function makeFrameRenderer(project, timeline, images, W, H) {
     ctx.restore();
   }
 
-  return function frame(t) {
-    const scenes = timeline.scenes;
-    let i = scenes.findIndex(s => t < s.end); if (i < 0) i = scenes.length - 1;
-    ctx.globalAlpha = 1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-    const lt = t - scenes[i].start;
-    if (i > 0 && lt < XFADE) { drawScene(i - 1, t); ctx.globalAlpha = ease(lt / XFADE); }
-    drawScene(i, t); ctx.globalAlpha = 1;
-    // Soft vignette at the bottom keeps captions readable on busy images.
-    const g = ctx.createLinearGradient(0, H * 0.55, 0, H);
-    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, mode.captionStyle === 'karaoke' ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.45)');
-    ctx.fillStyle = g; ctx.fillRect(0, H * 0.55, W, H * 0.45);
-    drawCard(i, t);
-    drawCaption(t);
+  function drawChrome(t) {
     if (portrait && project.captions.progress !== false) {
       ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(0, 0, W, 8 * u);
       ctx.fillStyle = pal.accent; ctx.fillRect(0, 0, W * (t / timeline.duration), 8 * u);
     }
     const fade = Math.min(1, t / 0.35, (timeline.duration - t) / 0.45);
     if (fade < 1) { ctx.fillStyle = `rgba(0,0,0,${1 - Math.max(0, fade)})`; ctx.fillRect(0, 0, W, H); }
+  }
+  const sceneAt = t => { const i = timeline.scenes.findIndex(s => t < s.end); return i < 0 ? timeline.scenes.length - 1 : i; };
+  return {drawCard, drawCaption, drawChrome, sceneAt, karaoke: mode.captionStyle === 'karaoke'};
+}
+
+export function makeFrameRenderer(project, timeline, images, W, H) {
+  const style = STYLES[project.style], XFADE = 0.4;
+  const canvas = createCanvas(W, H), ctx = canvas.getContext('2d');
+  const ov = makeOverlays(project, timeline, ctx, W, H);
+  function drawScene(i, t) {
+    const s = timeline.scenes[i], scene = project.scenes[i];
+    const motion = scene.motion || DEFAULT_MOTIONS[i % DEFAULT_MOTIONS.length];
+    drawMotion(ctx, images[i], W, H, motion, (t - s.start) / s.duration, style.motionScale);
+  }
+  return function frame(t) {
+    const i = ov.sceneAt(t);
+    ctx.globalAlpha = 1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    const lt = t - timeline.scenes[i].start;
+    if (i > 0 && lt < XFADE) { drawScene(i - 1, t); ctx.globalAlpha = ease(lt / XFADE); }
+    drawScene(i, t); ctx.globalAlpha = 1;
+    // Soft vignette at the bottom keeps captions readable on busy images.
+    const g = ctx.createLinearGradient(0, H * 0.55, 0, H);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, ov.karaoke ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.45)');
+    ctx.fillStyle = g; ctx.fillRect(0, H * 0.55, W, H * 0.45);
+    ov.drawCard(i, t); ov.drawCaption(t); ov.drawChrome(t);
+    return canvas;
+  };
+}
+
+// The acted engine: the stage painter draws the performance, overlays go on top.
+export function makeActedFrameRenderer(project, timeline, perf, W, H) {
+  const canvas = createCanvas(W, H), ctx = canvas.getContext('2d');
+  const paint = makeStagePainter(project, timeline, perf, W, H);
+  const ov = makeOverlays(project, timeline, ctx, W, H, {capY: H > W ? 0.85 : 0.9});
+  return function frame(t) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+    paint(ctx, t);
+    ov.drawCard(ov.sceneAt(t), t); ov.drawCaption(t); ov.drawChrome(t);
     return canvas;
   };
 }
@@ -236,13 +225,17 @@ export function sizeFor(project, preview) {
   return preview ? {W: Math.round(width / 2 / 2) * 2, H: Math.round(height / 2 / 2) * 2, fps: 15} : {W: width, H: height, fps: project.fps};
 }
 
+async function frameFactory(project, timeline, paths, W, H) {
+  if (project.engine === 'acted') return makeActedFrameRenderer(project, timeline, perform(project, timeline, W, H), W, H);
+  return makeFrameRenderer(project, timeline, await loadSceneImages(project, paths), W, H);
+}
+
 export async function renderVideo(project, timeline, paths, soundtrack, outFile, {preview = false} = {}) {
   const {W, H, fps} = sizeFor(project, preview);
-  const images = await loadSceneImages(project, paths);
-  const frame = makeFrameRenderer(project, timeline, images, W, H);
+  const frame = await frameFactory(project, timeline, paths, W, H);
   const silent = outFile.replace(/\.mp4$/, '.video.mp4');
   const child = spawn(FFMPEG, ['-v', 'error', '-y', '-f', 'rawvideo', '-pixel_format', 'rgba', '-video_size', `${W}x${H}`, '-framerate', String(fps), '-i', 'pipe:0',
-    '-an', '-c:v', 'libx264', '-preset', preview ? 'veryfast' : 'medium', '-crf', preview ? '28' : '19', '-pix_fmt', 'yuv420p', silent], {stdio: ['pipe', 'ignore', 'pipe']});
+    '-an', '-c:v', 'libx264', '-threads', '3', '-preset', preview ? 'veryfast' : 'faster', '-crf', preview ? '28' : '20', '-pix_fmt', 'yuv420p', silent], {stdio: ['pipe', 'ignore', 'pipe']});
   let err = ''; child.stderr.on('data', b => { err = (err + b).slice(-2000); });
   child.stdin.on('error', () => {});
   const done = new Promise((res, rej) => { child.on('error', rej); child.on('close', c => c === 0 ? res() : rej(new Error(`ffmpeg encode failed: ${err}`))); });
@@ -264,14 +257,16 @@ export async function renderVideo(project, timeline, paths, soundtrack, outFile,
 // Still frames for review: the middle of every scene, plus a cover image.
 export async function renderStills(project, timeline, paths, dir) {
   const {W, H} = sizeFor(project, true);
-  const images = await loadSceneImages(project, paths);
-  const frame = makeFrameRenderer(project, timeline, images, W, H);
+  const frame = await frameFactory(project, timeline, paths, W, H);
   fs.mkdirSync(dir, {recursive: true});
   const files = [];
-  for (const s of timeline.scenes) {
-    const t = s.audioStart + Math.min(s.audioDuration * 0.6, 2.5);
-    const f = path.join(dir, `${String(s.index + 1).padStart(2, '0')}-${s.id}.png`);
-    fs.writeFileSync(f, frame(t).toBuffer('image/png'));
+  // Illustrated: one frame per scene. Acted: one per beat, so every piece of acting can be checked.
+  const shots = project.engine === 'acted'
+    ? timeline.scenes.flatMap(s => s.beats.map(b => ({name: `${String(s.index + 1).padStart(2, '0')}-${s.id}-b${b.index + 1}`, t: b.audioStart + b.audioDuration * 0.65})))
+    : timeline.scenes.map(s => ({name: `${String(s.index + 1).padStart(2, '0')}-${s.id}`, t: s.audioStart + Math.min(s.audioDuration * 0.6, 2.5)}));
+  for (const sh of shots) {
+    const f = path.join(dir, `${sh.name}.png`);
+    fs.writeFileSync(f, frame(sh.t).toBuffer('image/png'));
     files.push(f);
   }
   return files;

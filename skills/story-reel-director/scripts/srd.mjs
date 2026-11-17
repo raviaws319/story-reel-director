@@ -7,7 +7,9 @@ import {ROOT, FFMPEG, FFPROBE, PYTHON, has, loadProject, readJson, writeJson, va
 import {MODES, STYLES} from './lib/styles.mjs';
 import {narrate, ttsAvailable, TTS_PROVIDERS} from './lib/tts.mjs';
 import {generateImages, IMAGE_PROVIDERS} from './lib/images.mjs';
-import {buildTimeline, toSrt} from './lib/timeline.mjs';
+import {buildTimeline as buildStillTimeline, toSrt} from './lib/timeline.mjs';
+import {buildActedTimeline, perform} from './lib/acting/stage.mjs';
+import {reviewPerformance} from './lib/acting/review.mjs';
 import {mixSoundtrack} from './lib/audio.mjs';
 import {renderVideo, renderStills} from './lib/render.mjs';
 
@@ -16,13 +18,14 @@ const HELP = `Story Reel Director
 Commands:
   doctor                         Check ffmpeg, Python, voices and API keys
   styles                         List modes, styles and their default voices
-  new <story|kids|food> <dir>    Start a project from the example for that mode
+  new <kids|story> <dir>         Start a project from the example for that mode
   validate <project>             Check project.json
   voice <project>                Generate narration + word timings
-  images <project>               Generate scene images
+  images <project>               Generate scene images (illustrated engine only)
+  review <project>               Acted engine: check pacing and staging, write a contact sheet
   stills <project>               Render one review frame per scene (build/stills)
   render <project>               Mix audio and render the final MP4
-  build <project>                voice -> images -> stills -> render
+  build <project>                Everything: voice -> (images) -> review -> stills -> render
 
 Options:
   --voice <${TTS_PROVIDERS.join('|')}>         Override the voice provider
@@ -44,6 +47,7 @@ function parse(argv) {
   return {args, opts};
 }
 
+const buildTimeline = (project, paths) => project.engine === 'acted' ? buildActedTimeline(project, paths) : buildStillTimeline(project, paths);
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'video';
 
 async function finish(project, paths, opts) {
@@ -91,7 +95,7 @@ async function main() {
   }
 
   if (cmd === 'new') {
-    if (!MODES[target] || !extra) throw new Error('Usage: new <story|kids|food> <dir>');
+    if (!MODES[target] || !extra) throw new Error('Usage: new <kids|story> <dir>');
     const dest = path.resolve(extra);
     if (fs.existsSync(path.join(dest, 'project.json'))) throw new Error(`${dest}/project.json already exists`);
     const example = readJson(path.join(ROOT, 'examples', target, 'project.json'));
@@ -112,12 +116,15 @@ async function main() {
   const {project, paths} = loadProject(target);
   const only = opts.only ? opts.only.split(',') : undefined;
   if (cmd === 'voice') console.log(JSON.stringify(await narrate(project, paths, {force: opts.force, provider: opts.voice}), null, 2));
+  else if (cmd === 'review') { const r = await reviewPerformance(project, buildTimeline(project, paths), paths); console.log(JSON.stringify(r, null, 2)); }
+  else if (cmd === 'images' && project.engine === 'acted') console.log('Acted projects draw their own pictures: no images step needed.');
   else if (cmd === 'images') console.log(JSON.stringify(await generateImages(project, paths, {force: opts.force, provider: opts.images, only}), null, 2));
   else if (cmd === 'stills') console.log((await renderStills(project, buildTimeline(project, paths), paths, path.join(paths.build, 'stills'))).join('\n'));
   else if (cmd === 'render') console.log(JSON.stringify(await finish(project, paths, opts), null, 2));
   else if (cmd === 'build') {
     await narrate(project, paths, {force: opts.force, provider: opts.voice});
-    await generateImages(project, paths, {force: opts.force, provider: opts.images});
+    if (project.engine !== 'acted') await generateImages(project, paths, {force: opts.force, provider: opts.images});
+    else { const r = await reviewPerformance(project, buildTimeline(project, paths), paths); log(`review: score ${r.score}/100, ${r.issues.length} issue(s) -> ${r.contact_sheet}`); }
     const stills = await renderStills(project, buildTimeline(project, paths), paths, path.join(paths.build, 'stills'));
     log(`review stills: ${path.dirname(stills[0])}`);
     console.log(JSON.stringify(await finish(project, paths, opts), null, 2));

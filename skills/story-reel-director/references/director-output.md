@@ -23,7 +23,7 @@ For each scene, in fenced code blocks so they copy cleanly:
 The full narration as one block, with `[pause]` marks between scenes. Then how to record it for free: `edge-tts --voice en-US-AndrewNeural --rate=-4% --text "..." --write-media vo.mp3 --write-subtitles vo.srt` (or use CapCut's built-in text-to-speech).
 
 ## 6. Edit guide
-Assembly steps for CapCut: import clips in order, drop in the voiceover, auto-captions (one line, bold, highlight the active word for story/food, read-along style for kids), music at about −20 dB under the voice, card text overlays from the scene table, and export settings (1080×1920, 30 fps for 9:16).
+Assembly steps for CapCut: import clips in order, drop in the voiceover, auto-captions (one line, bold, highlight the active word for story, read-along style for kids), music at about −20 dB under the voice, card text overlays from the scene table, and export settings (1080×1920, 30 fps for 9:16).
 
 ## 7. Posting kit
 Three title options, a 2-sentence description, 5–8 hashtags, and a thumbnail prompt. Kids mode: no hashtags that target children, and remind the user to mark the video "Made for kids" on YouTube.

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {ROOT, FFMPEG, PYTHON, run, has, probeDuration, sha, readJson, writeJson, log} from './core.mjs';
+import {beatUnits} from './acting/stage.mjs';
 
 export const TTS_PROVIDERS = ['edge', 'piper', 'espeak'];
 
@@ -67,7 +68,7 @@ function toWav(src, dst) {
 function synthEdge(text, voice, tmpBase) {
   const audio = tmpBase + '.mp3', words = tmpBase + '.edge-words.json';
   const r = spawnSync(PYTHON, [path.join(ROOT, 'scripts', 'tts_edge.py')], {
-    input: JSON.stringify({text, voice: voice.name, rate: voice.rate, audio, words}), encoding: 'utf8',
+    input: JSON.stringify({text, voice: voice.name, rate: voice.rate, pitch: voice.pitch, audio, words}), encoding: 'utf8',
   });
   if (r.error || r.status !== 0) throw new Error(`Edge TTS failed: ${(r.stderr || r.error?.message || '').slice(-800)}\nTip: pip install edge-tts, check internet access, or set "voice": {"provider": "piper"}.`);
   const timed = readJson(words);
@@ -88,7 +89,8 @@ function synthPiper(text, voice, tmpBase) {
 function synthEspeak(text, voice, tmpBase) {
   const src = tmpBase + '.espeak.wav';
   const speed = Math.round(155 * rateFactor(voice.rate));
-  run(process.env.ESPEAK || 'espeak-ng', ['-v', voice.espeakVoice || 'en-us', '-s', String(speed), '-w', src, text]);
+  const pitch = Math.max(0, Math.min(99, 50 + (parseInt(voice.pitch, 10) || 0)));
+  run(process.env.ESPEAK || 'espeak-ng', ['-v', voice.espeakVoice || 'en-us', '-s', String(speed), '-p', String(pitch), '-w', src, text]);
   return {src, timed: null};
 }
 
@@ -100,14 +102,17 @@ export function ttsAvailable(provider) {
 }
 
 export async function narrate(project, paths, {force = false, provider} = {}) {
-  const voice = {...project.voice, ...(provider ? {provider} : {})};
-  if (!TTS_PROVIDERS.includes(voice.provider)) throw new Error(`voice.provider must be one of ${TTS_PROVIDERS.join(', ')}`);
+  // One clip per scene (illustrated) or per beat (acted, where characters have their own voices).
+  const units = project.engine === 'acted' ? beatUnits(project) : project.scenes.map(s => ({id: s.id, text: s.narration, voice: project.voice}));
+  const base = {...project.voice, ...(provider ? {provider} : {})};
+  if (!TTS_PROVIDERS.includes(base.provider)) throw new Error(`voice.provider must be one of ${TTS_PROVIDERS.join(', ')}`);
   fs.mkdirSync(paths.audio, {recursive: true});
   const manifestFile = path.join(paths.audio, 'manifest.json');
   const manifest = fs.existsSync(manifestFile) ? readJson(manifestFile) : {};
   const results = [];
-  for (const scene of project.scenes) {
-    const key = sha(JSON.stringify([scene.narration, voice.provider, voice.name, voice.rate, voice.model]));
+  for (const unit of units) {
+    const scene = {id: unit.id, narration: unit.text}, voice = {...unit.voice, provider: base.provider};
+    const key = sha(JSON.stringify([scene.narration, voice.provider, voice.name, voice.rate, voice.pitch, voice.model]));
     const wav = path.join(paths.audio, `${scene.id}.wav`);
     const wordsFile = path.join(paths.audio, `${scene.id}.words.json`);
     if (!force && manifest[scene.id]?.key === key && fs.existsSync(wav) && fs.existsSync(wordsFile)) {

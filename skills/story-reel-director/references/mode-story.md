@@ -12,6 +12,13 @@ Stories about anything: history, science, biographies, motivation, mysteries, tr
 
 For long-form (3 min+), repeat the tension → turn beat every 60–90 seconds and add a mini-hook at each chapter start ("But that was only the beginning.").
 
+## Staging (acted engine)
+
+- Tell it through two or three characters with clear wants; let them speak instead of narrating everything.
+- History and biography: a `child` or `adult` puppet stands in for the person in a simple costume (hat, glasses, scarf, colours). Abstract ideas (money, time, fear) can be floating characters.
+- Use `time` changes and weather to show time passing; `night` + `push-in` for the low point, `day` + `pull-out` for the resolution.
+- For realistic, cinematic or documentary looks, use the illustrated engine instead.
+
 ## Cards
 
 - `title` on the hook scene.

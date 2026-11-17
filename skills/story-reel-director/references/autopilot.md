@@ -1,4 +1,6 @@
-# Autopilot: render a finished video
+# Rendering videos (both engines) and the illustrated engine
+
+Setup, providers, commands and troubleshooting apply to both engines. The `project.json` format on this page is for the **illustrated** engine (generated still images); the acted engine's format is in [acting.md](acting.md).
 
 Run every command from this Skill folder (the one containing `package.json`). Projects can live anywhere, e.g. `~/videos/my-story`.
 
@@ -19,7 +21,7 @@ ffmpeg must be on the PATH (macOS: `brew install ffmpeg`, Windows: `winget insta
 | Voice | `edge` (default) | Free, no key, needs internet | Natural neural voices with exact word timings |
 | Voice | `piper` | Free, offline | Install `piper` and a `.onnx` voice; set `voice.model` or `PIPER_MODEL` |
 | Voice | `espeak` | Free, offline | Robotic; **previews only** |
-| Images | `pollinations` (default) | Free, no key, needs internet | Can be slow or rate-limited; retries automatically |
+| Images (illustrated only) | `pollinations` (default) | Free, no key, needs internet | Can be slow or rate-limited; retries automatically |
 | Images | `gemini` | `GEMINI_API_KEY` (free tier) | Model via `SRD_GEMINI_IMAGE_MODEL` |
 | Images | `openai` | `OPENAI_API_KEY` (paid) | Model via `SRD_OPENAI_IMAGE_MODEL` |
 | Images | `local` | Free, offline | Placeholder art showing the prompt, for checking timing/layout |
@@ -30,7 +32,8 @@ Set providers in `project.json` (`"voice": {"provider": "edge"}`, `"images": {"p
 ## Commands
 
 ```bash
-node scripts/srd.mjs new story ~/videos/bamboo      # start from the mode's example
+node scripts/srd.mjs new story ~/videos/bamboo      # start from the mode's (acted) example
+node scripts/srd.mjs review ~/videos/bamboo          # acted engine: score, issues, contact sheets
 node scripts/srd.mjs validate ~/videos/bamboo
 node scripts/srd.mjs build ~/videos/bamboo --preview # fast half-res check
 node scripts/srd.mjs build ~/videos/bamboo           # final 1080p
@@ -47,7 +50,7 @@ Output in `<project>/build/`: `<title>.mp4`, `<title>.srt`, `stills/` (one revie
 ```jsonc
 {
   "title": "The Bamboo That Waited Five Years",   // also the output file name
-  "mode": "story",                                 // story | kids | food
+  "mode": "story",                                 // story | kids
   "style": "cinematic",                            // see styles.md (optional: mode default)
   "aspect": "9:16",                                // 9:16 | 16:9 | 1:1
   "characters": [{"name": "the farmer", "look": "weathered farmer, straw hat, faded blue shirt"}],
@@ -73,7 +76,7 @@ Output in `<project>/build/`: `<title>.mp4`, `<title>.srt`, `stills/` (one revie
 }
 ```
 
-Cards: `title {text}`, `end {text, subtitle}`, `fact {text, title?}`, `moral {text, title?}`, `step {number, text}`, `ingredients {items[], title?}`, `timer {minutes, label?}`.
+Cards: `title {text}`, `end {text, subtitle}`, `fact {text, title?}`, `moral {text, title?}`.
 
 ## Review checklist (do this before saying "done")
 
@@ -88,4 +91,4 @@ Cards: `title {text}`, `end {text, subtitle}`, `fact {text, title?}`, `moral {te
 - **Edge TTS fails**: `pip install -U edge-tts`; check internet. Behind a corporate proxy, set `HTTPS_PROXY`.
 - **Pollinations slow / HTTP 429 / 5xx**: wait a minute and rerun `images` (finished scenes are cached), or switch to `--images gemini`.
 - **Images fail behind a proxy**: Node's `fetch` ignores `HTTPS_PROXY` unless you also set `NODE_USE_ENV_PROXY=1` (Node 22.21+ / 24+).
-- **Long renders**: about real time at 1080p on a laptop. Use `--preview` while iterating.
+- **Long renders**: roughly real time at 1080p on a laptop for either engine. Use `--preview` while iterating.

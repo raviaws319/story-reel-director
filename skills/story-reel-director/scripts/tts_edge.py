@@ -17,6 +17,8 @@ except ImportError:  # pragma: no cover - reported to the Node side
 
 async def synthesize(req):
     kwargs = {"rate": req.get("rate") or "+0%"}
+    if req.get("pitch"):
+        kwargs["pitch"] = req["pitch"]
     try:
         communicate = edge_tts.Communicate(req["text"], req["voice"], boundary="WordBoundary", **kwargs)
     except TypeError:  # edge-tts < 7 always emits word boundaries
